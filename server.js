@@ -4,6 +4,9 @@ const PORT = process.env.PORT
 //console.log(PORT)
 const app= express()
 const methodOverride = require('method-override')
+const mongoose = require('mongoose')
+
+  
 
 // MIDDLEWARE
 app.set('views', __dirname + '/views')
@@ -30,6 +33,8 @@ app.get('*', (req, res) => {
     res.send('404')
   })  
 
+mongoose.connect(process.env.MONGO_URI, {useNewUrlParser: true, useUnifiedTopology: true})
+.then(() => { console.log('connected to mongo: ', process.env.MONGO_URI) })
 
 app.listen(PORT, () => {
     console.log('listening on port',PORT)
