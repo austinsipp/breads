@@ -2,23 +2,25 @@ const express = require('express')
 const breads = express.Router()
 const Bread = require('../models/bread.js')
 const seedData = require('../models/seed.js')
+const Baker = require('../models/baker.js')
 
 
 
-// INDEX
+// Index:
 breads.get('/', (req, res) => {
-    Bread.find()
+  Baker.find()
+    .then(foundBakers => {
+      Bread.find()
       .then(foundBreads => {
-        res.render('Index',
-      {
-        breads: foundBreads,
-        title: 'Index Page'
-      }
-    )
+          res.render('index', {
+              breads: foundBreads,
+              bakers: foundBakers,
+              title: 'Index Page'
+          })
       })
-    
-  // res.send(Bread)
+    })
 })
+
 
 //seed
 breads.get('/data/seed', (req, res) => {
@@ -34,33 +36,44 @@ breads.get('/data/seed', (req, res) => {
 
 // NEW
 breads.get('/new', (req, res) => {
-  res.render('new')
+  Baker.find()
+  .then(foundBakers => {
+    res.render('new', {
+      bakers: foundBakers
+    })
+  })
 })
 
 // EDIT
 breads.get('/:id/edit', (req, res) => {
-  Bread.findById(req.params.id) 
-    .then(foundBread => { 
-      res.render('edit', {
-        bread: foundBread 
-      })
+  Baker.find()
+    .then(foundBakers => {
+        Bread.findById(req.params.id)
+          .then(foundBread => {
+            res.render('edit', {
+                bread: foundBread, 
+                bakers: foundBakers 
+            })
+          })
     })
 })
+
 
 
 
 // SHOW
-breads.get('/:arrayIndex', (req, res) => {
-  Bread.findById(req.params.arrayIndex)
-    .then(foundBread => {
-      res.render('show', {
-        bread: foundBread
+breads.get('/:id', (req, res) => {
+  Bread.findById(req.params.id)
+    .populate('baker')
+      .then(foundBread => {
+        const bakedBy = foundBread.getBakedBy() 
+        console.log(bakedBy)
+        res.render('show', {
+            bread: foundBread
+        })
       })
     })
-    .catch(err => {
-      res.send('404')
-    })
-})
+
 
 
 
@@ -104,7 +117,13 @@ breads.post('/', (req, res) => {
     req.body.hasGluten = false
   }
   Bread.create(req.body)
-  res.redirect('/breads')
+  .then(() => {
+    res.redirect('/breads')
+  })
+  .catch(err => {
+    console.log(err)
+    res.send(err)
+  })
 })
 
 
